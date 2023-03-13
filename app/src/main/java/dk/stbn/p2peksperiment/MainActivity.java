@@ -1,7 +1,5 @@
 package dk.stbn.p2peksperiment;
 
-
-
 import android.annotation.SuppressLint;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -16,9 +14,15 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -107,10 +111,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-
         if (view == startClient) {
             if (!clientStarted) {
-                //her should bed logic for making a new node in chain
+                //here should be the logic for making a new node in chain
                 clientStarted = true;
                 clientThread.start();
                 clientinfo += "- - - CLIENT STARTED - - - \n";
@@ -152,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         DataInputStream inNodeStream = new DataInputStream(nodeSocket.getInputStream());
                         DataOutputStream outNodeStream = new DataOutputStream(nodeSocket.getOutputStream());
+
                         String str;
                         String response;
                         serverCarryOn = true;
@@ -164,7 +168,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 //logic to handle things
                                 if (str.equals("getId")) {
                                     //run with getId
-                                    response = node.getId();
+
+                                    JSONObject obj = new JSONObject();
+                                    obj.put("header", "HTTP");
+                                    obj.put("status", "200 OK");
+                                    response = (obj.toString());
+
+                                    //response = node.getId();
+
                                 } else if (str.startsWith("newNeighbor")) {
                                     //run with newNeighbor;id1,id2,id3;left
                                     List<String> commandList = Arrays.asList(str.split(";"));
@@ -188,6 +199,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     //run like AddData;{some json data can not have ;}
                                     List<String> commandList = Arrays.asList(str.split(";"));
                                     response = node.AddData(commandList.get(1));
+
                                 } else {
                                     response = "Fail";
                                 }
@@ -196,7 +208,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 outNodeStream.writeUTF(response);
                                 outNodeStream.flush();
                                 waitABit();
-                                System.out.println("her");
                                 serverCarryOn = false;
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -244,7 +255,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     class MyClientThread implements Runnable {
         @Override
         public void run() {
-
             try {
                 cUpdate("CLIENT: starting client socket ");
                 Socket connectionToServer = new Socket(REMOTE_IP_ADDRESS, 4444);
@@ -252,13 +262,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 DataInputStream inClientStream = new DataInputStream(connectionToServer.getInputStream());
                 DataOutputStream outClientStream = new DataOutputStream(connectionToServer.getOutputStream());
+
                 String messageFromServer;
 
                 outClientStream.writeUTF(command);
                 outClientStream.flush();
                 cUpdate("I said:      " + command);
                 messageFromServer = inClientStream.readUTF();
+
+                try {
+                    JSONObject obj = new JSONObject(messageFromServer);
+                    System.out.println("phonetype value " + obj.getString("status"));
+                    messageFromServer = obj.getString("status");
+
+                }catch (JSONException e){
+                    System.out.println("Failed!");
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+
                 cUpdate("Server says: " + messageFromServer);
+
                 waitABit();
                 connectionToServer.shutdownInput();
                 cUpdate("CLIENT: closed inputstream");
@@ -266,6 +290,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 cUpdate("CLIENT: closed outputstream");
                 connectionToServer.close();
                 cUpdate("CLIENT: closed socket");
+
 
             }catch (IOException e) {
                 e.printStackTrace();
