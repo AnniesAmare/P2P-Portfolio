@@ -21,8 +21,6 @@ import org.json.JSONObject;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -62,7 +60,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean hasConnaction = false;
 
     private Node node;
-
 
 
     @Override
@@ -117,11 +114,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 clientStarted = true;
                 clientThread.start();
                 clientinfo += "- - - CLIENT STARTED - - - \n";
-                startClient.setText("Resend");
-            }else{
-                if(!ipInputField.getText().toString().equals(REMOTE_IP_ADDRESS)) {
+                startClient.setText("Send");
+            } else {
+                if (!ipInputField.getText().toString().equals(REMOTE_IP_ADDRESS)) {
+                    //Command typed into input field
                     command = ipInputField.getText().toString();
-                }else{
+                } else {
+                    //Initial command
                     command = "getId";
                 }
                 Thread clientThread = new Thread(new MyClientThread());
@@ -144,92 +143,126 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void run() {
             //Always be ready for next client
             boolean running = true;
-            while(true){
+            while (true) {
                 try {
-            while (running) {
-                    try {
-                        ServerSocket serverSocket = new ServerSocket(4444);
-                        sUpdate("SERVER: start listening..");
-                        Socket nodeSocket = serverSocket.accept();
-                        sUpdate("SERVER connection accepted");
+                    while (running) {
+                        try {
+                            ServerSocket serverSocket = new ServerSocket(4444);
+                            sUpdate("SERVER: start listening..");
+                            Socket nodeSocket = serverSocket.accept();
+                            sUpdate("SERVER connection accepted");
 
-                        DataInputStream inNodeStream = new DataInputStream(nodeSocket.getInputStream());
-                        DataOutputStream outNodeStream = new DataOutputStream(nodeSocket.getOutputStream());
+                            DataInputStream inNodeStream = new DataInputStream(nodeSocket.getInputStream());
+                            DataOutputStream outNodeStream = new DataOutputStream(nodeSocket.getOutputStream());
 
-                        String str;
-                        String response;
-                        serverCarryOn = true;
-                        //Start conversation
-                        while (serverCarryOn) {
-                            try {
-                                str = (String) inNodeStream.readUTF();
-                                sUpdate("Client says: " + str);
-                                System.out.println("client to server " + str);
-                                //logic to handle things
-                                if (str.equals("getId")) {
-                                    //run with getId
+                            String request;
+                            String response;
 
-                                    JSONObject obj = new JSONObject();
-                                    obj.put("header", "HTTP");
-                                    obj.put("status", "200 OK");
-                                    response = (obj.toString());
+                            //default response
+                            HttpResponse defaultHttpResponse = new HttpResponse("HTTP", "404 Not Found");
+                            response = defaultHttpResponse.GetJsonString();
 
-                                    //response = node.getId();
+                            serverCarryOn = true;
+                            //Start conversation
+                            while (serverCarryOn) {
+                                try {
+                                    request = (String) inNodeStream.readUTF();
 
-                                } else if (str.startsWith("newNeighbor")) {
-                                    //run with newNeighbor;id1,id2,id3;left
-                                    List<String> commandList = Arrays.asList(str.split(";"));
-                                    response = node.newNeighbor(Arrays.asList(commandList.get(1).split(",")), commandList.get(2)).toString();
-                                } else if (str.startsWith("GetPhonebookLeft")) {
-                                    //run with GetPhonebookRight
-                                    response = node.GetPhonebookLeft().toString();
-                                } else if (str.startsWith("GetPhonebookRight")) {
-                                    //run with GetPhonebookRight
-                                    response = node.GetPhonebookRight().toString();
-                                } else if (str.startsWith("GetData")) {
-                                    //run with GetData;dataId
-                                    List<String> commandList = Arrays.asList(str.split(";"));
-                                    response = node.GetData(commandList.get(1));
-                                } else if (str.startsWith("RemoveData")) {
-                                    //run with RemoveData;dataId
-                                    List<String> commandList = Arrays.asList(str.split(";"));
-                                    node.RemoveData(commandList.get(1));
-                                    response = "Data Removed";
-                                } else if (str.startsWith("AddData")) {
-                                    //run like AddData;{some json data can not have ;}
-                                    List<String> commandList = Arrays.asList(str.split(";"));
-                                    response = node.AddData(commandList.get(1));
+                                    sUpdate("Client says: " + request);
+                                    System.out.println("client to server " + request);
 
-                                } else {
-                                    response = "Fail";
+                                    //Converting request to a HttpRequest object
+                                    HttpRequest httpRequest = new HttpRequest(request);
+                                    //If the request is successfully read:
+                                    if (!httpRequest.Path.isEmpty()) {
+                                        HttpResponse httpResponse;
+                                        //defining the response based on the path
+                                        switch(httpRequest.Path.toLowerCase()){
+                                            case "getid":
+                                                httpResponse = new HttpResponse("HTTP", "200 OK", node.getId());
+                                                break;
+                                            default:
+                                                System.out.println("Does not recognize path: " + httpRequest.Path.toLowerCase());
+                                                httpResponse = new HttpResponse("HTTP", "400 Bad Request");
+                                        }
+
+                                        response = httpResponse.GetJsonString();
+                                    }
+
+
+
+
+                                        /*
+                                        if (str.equals("getId")) {
+                                            //run with getId
+
+                                            JSONObject obj = new JSONObject();
+                                            obj.put("header", "HTTP");
+                                            obj.put("status", "200 OK");
+
+                                            response = (obj.toString());
+
+                                            //response = node.getId();
+
+                                        } else if (str.startsWith("newNeighbor")) {
+                                            //run with newNeighbor;id1,id2,id3;left
+                                            List<String> commandList = Arrays.asList(str.split(";"));
+                                            response = node.newNeighbor(Arrays.asList(commandList.get(1).split(",")), commandList.get(2)).toString();
+                                        } else if (str.startsWith("GetPhonebookLeft")) {
+                                            //run with GetPhonebookRight
+                                            response = node.GetPhonebookLeft().toString();
+                                        } else if (str.startsWith("GetPhonebookRight")) {
+                                            //run with GetPhonebookRight
+                                            response = node.GetPhonebookRight().toString();
+                                        } else if (str.startsWith("GetData")) {
+                                            //run with GetData;dataId
+                                            List<String> commandList = Arrays.asList(str.split(";"));
+                                            response = node.GetData(commandList.get(1));
+                                        } else if (str.startsWith("RemoveData")) {
+                                            //run with RemoveData;dataId
+                                            List<String> commandList = Arrays.asList(str.split(";"));
+                                            node.RemoveData(commandList.get(1));
+                                            response = "Data Removed";
+                                        } else if (str.startsWith("AddData")) {
+                                            //run like AddData;{some json data can not have ;}
+                                            List<String> commandList = Arrays.asList(str.split(";"));
+                                            response = node.AddData(commandList.get(1));
+
+                                        } else {
+                                            response = "Fail";
+                                        }
+                                         */
+
+                                    sUpdate(response);
+                                    outNodeStream.writeUTF(response);
+                                    outNodeStream.flush();
+                                    waitABit();
+                                    serverCarryOn = false;
+
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    throw new RuntimeException(e);
                                 }
-
-                                sUpdate(response);
-                                outNodeStream.writeUTF(response);
-                                outNodeStream.flush();
-                                waitABit();
-                                serverCarryOn = false;
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                throw new RuntimeException(e);
                             }
-                        }//serverCarryOn loop
 
-                        //Closing everything down
-                        nodeSocket.shutdownInput();
-                        sUpdate("SERVER: inputstream closed");
-                        nodeSocket.shutdownOutput();
-                        sUpdate("SERVER: outputstream closed");
-                        nodeSocket.close();
-                        sUpdate("SERVER: Client socket closed");
-                        serverSocket.close();
-                        sUpdate("SERVER: Server socket closed");
-                    } catch (IOException e) {
-                        sUpdate("oops!!");
-                        throw new RuntimeException(e);
+                            //Closing everything down
+                            nodeSocket.shutdownInput();
+                            sUpdate("SERVER: inputstream closed");
+                            nodeSocket.shutdownOutput();
+                            sUpdate("SERVER: outputstream closed");
+                            nodeSocket.close();
+                            sUpdate("SERVER: Client socket closed");
+                            serverSocket.close();
+                            sUpdate("SERVER: Server socket closed");
+
+                        } catch (IOException e) {
+                            sUpdate("ServerCarryOn encountered an error");
+                            serverCarryOn = false;
+                            e.printStackTrace();
+                            throw new RuntimeException(e);
+                        }
                     }
-                }//running loop
-            }catch (Exception e){
+                } catch (Exception e) {
                     running = false;
                 }
             }//While loop
@@ -263,25 +296,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 DataInputStream inClientStream = new DataInputStream(connectionToServer.getInputStream());
                 DataOutputStream outClientStream = new DataOutputStream(connectionToServer.getOutputStream());
 
-                String messageFromServer;
+                String serverResponse;
 
-                outClientStream.writeUTF(command);
-                outClientStream.flush();
-                cUpdate("I said:      " + command);
-                messageFromServer = inClientStream.readUTF();
+                //default value for clientRequest
+                String clientRequest = command;
 
-                try {
-                    JSONObject obj = new JSONObject(messageFromServer);
-                    System.out.println("phonetype value " + obj.getString("status"));
-                    messageFromServer = obj.getString("status");
-
-                }catch (JSONException e){
-                    System.out.println("Failed!");
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
+                //Constructing the command
+                if (!command.isEmpty()){
+                    switch (command.toLowerCase()){
+                        case "getid":
+                            HttpRequest httpRequest = new HttpRequest("HTTP", "GET", "getID");
+                            clientRequest = httpRequest.GetJsonString();
+                            break;
+                    }
                 }
 
-                cUpdate("Server says: " + messageFromServer);
+                outClientStream.writeUTF(clientRequest);
+                outClientStream.flush();
+                cUpdate("I said:      " + clientRequest);
+                serverResponse = inClientStream.readUTF();
+                cUpdate("Server says: " + serverResponse);
 
                 waitABit();
                 connectionToServer.shutdownInput();
@@ -292,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 cUpdate("CLIENT: closed socket");
 
 
-            }catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }
