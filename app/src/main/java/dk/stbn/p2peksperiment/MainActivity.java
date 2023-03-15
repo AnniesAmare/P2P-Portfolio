@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, NodeObserver{
     //commit test
     // UI-elements
     private Button startClient, submitIP;
@@ -46,9 +46,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int PORT = 4444;
     private String THIS_IP_ADDRESS = "";
     private String REMOTE_IP_ADDRESS = "";
-    private Thread serverThread = new Thread(new MyServerThread());
+    //private Thread serverThread = new Thread(new MyServerThread());
     private Thread clientThread = new Thread(new MyClientThread());
     private String command = "getId";
+
+    //singleton
+
+    private Thread serverThread;
+    Singleton singleton = Singleton.getInstance();
 
     // Some state
     private boolean ip_submitted = false;
@@ -99,9 +104,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         nodesRight.add(THIS_IP_ADDRESS);
         node = new Node(THIS_IP_ADDRESS, nodesLeft, nodesRight);
 
-
-        //Starting the server thread
-        serverThread.start();
+        //serverThread.start();
+        serverThread = singleton.server;
+        singleton.addObserver(this);
         serverinfo += "- - - SERVER STARTED - - -\n";
 
     }
@@ -137,6 +142,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }//onclick
 
+    @Override
+    public void update(String info) {
+        sUpdate(info);
+    }
+
+    /*
     class MyServerThread implements Runnable {
         @SuppressLint("SuspiciousIndentation")
         @Override
@@ -169,6 +180,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     request = (String) inNodeStream.readUTF();
 
                                     sUpdate("Client says: " + request);
+                                    //notify(X)
+
                                     System.out.println("client to server " + request);
 
                                     //Converting request to a HttpRequest object
@@ -192,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-                                        /*
+
                                         if (str.equals("getId")) {
                                             //run with getId
 
@@ -231,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         } else {
                                             response = "Fail";
                                         }
-                                         */
+
 
                                     sUpdate(response);
                                     outNodeStream.writeUTF(response);
@@ -268,6 +281,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }//While loop
         }//run
     }//runnable
+
+
+     */
+
 
     // !!! Returns 0.0.0.0 on emulator
     //Modified from https://www.tutorialspoint.com/sending-and-receiving-data-with-sockets-in-android
@@ -371,5 +388,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 clientInfoTv.setText(clientinfo);
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        singleton.removeObserver(this);
+        super.onDestroy();
     }
 }
