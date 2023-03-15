@@ -181,10 +181,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                 httpResponse = new HttpResponse("HTTP", "200 OK", node.getId());
                                                 break;
                                             case "adddata":
-                                                Data data = new Data(httpRequest.Body); //creating new data object
-                                                System.out.println("Test for: getting data, and storing it");
-                                                httpResponse = new HttpResponse("HTTP", "200 OK", "Data has been received"); //note getid should be the data id instead of the client id
+                                                //add data (which is the request body)
+                                                String hash = node.AddData(httpRequest.Body);
+
+                                                //send back key in body
+                                                httpResponse = new HttpResponse("HTTP", "200 OK", "Data has been added. The key is: " + hash);
                                                 break;
+
                                             default:
                                                 System.out.println("Does not recognize path: " + httpRequest.Path.toLowerCase());
                                                 httpResponse = new HttpResponse("HTTP", "400 Bad Request");
@@ -310,15 +313,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 command = "addData";
                 String clientRequest = command;
 
+                HttpRequest httpRequest;
+
                 //Constructing the command
                 if (!command.isEmpty()){
                     switch (command.toLowerCase()){
                         case "getid":
-                            HttpRequest httpRequest = new HttpRequest("HTTP", "GET", "getID");
+                            httpRequest = new HttpRequest("HTTP", "GET", "getID");
                             clientRequest = httpRequest.GetJsonString();
                             break;
                         case "adddata":
-                            HttpRequest httpRequest2 = new HttpRequest("HTTP", "POST", "getData",  inClientStream.readUTF());
+                            httpRequest = new HttpRequest("HTTP", "POST", "addData", "test");
+                            clientRequest = httpRequest.GetJsonString();
                             break;
                     }
                 }

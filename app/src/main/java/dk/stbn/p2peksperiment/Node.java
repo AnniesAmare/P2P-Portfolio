@@ -71,14 +71,22 @@ public class Node {
 
      */
 
-    public void AddData(String newData){
+    public String AddData(String newData){
+        //hashes the the data. The hashed data is kept as key
+        SHA256 newHash = new SHA256();
+        String dataId = newHash.hash(newData);
 
+        //create new data object
+        Data data = new Data(dataId,newData,true,false);
 
+        //convert data to json to store it
+        String dataAsJson = data.DataToJson();
 
+        //add data to storage
+        this.DataStorage.put(data.ID,dataAsJson);
 
+        return dataId;
 
-        Data.add(newData);
-     //TODO figure out a way to make this -- return key
     }
 
 
