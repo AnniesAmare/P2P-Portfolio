@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
+    //commit test
     // UI-elements
     private Button startClient, submitIP;
     private TextView serverInfoTv, clientInfoTv;
