@@ -19,7 +19,8 @@ public class SHA256 {
         byte[] input = inputText.getBytes();
         byte[] hashValue = sha256Hash(input);
         String hashValueText = Hex.byteArrayToHexString(hashValue);
-        String blocks = Hex.hexStringToMultiLine(hashValueText,32);
+        //String blocks = Hex.hexStringToMultiLine(hashValueText,32);
+        String blocks = Hex.hexStringToSingleLine(hashValueText);
         return blocks;
     }
 

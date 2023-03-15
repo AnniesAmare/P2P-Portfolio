@@ -12,6 +12,9 @@ public class Node {
     String Id;
 
     Dictionary DataStorage;
+
+
+
     List<String> DataIndex; //should be directory
     List<String> Data;
 
@@ -21,6 +24,11 @@ public class Node {
         NodesLeft = nodesLeft;
         NodesRight = nodesRight;
         DataStorage = new Hashtable();
+
+        //default value in storage FOR TESTING
+        this.DataStorage.put(
+                "9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08",
+                "test");
 
     }
 
@@ -49,15 +57,15 @@ public class Node {
 
 
 
-    /*
-    String GetData(String dataId){
-        for (int i = 0; i < DataIndex.size(); i++) {
-            if(dataId.equals(DataIndex.get(i))){
-                return Data.get(i);
-            }
-        }
-        return null;
+
+
+
+    public String GetData(String dataId){
+        String data = this.DataStorage.get(dataId).toString();
+        return data;
     }
+
+     /*
 
     void RemoveData(String dataId){
         for (int i = 0; i < DataIndex.size(); i++) {

@@ -187,6 +187,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                 //send back key in body
                                                 httpResponse = new HttpResponse("HTTP", "200 OK", "Data has been added. The key is: " + hash);
                                                 break;
+                                            case "getdata":
+
+                                                //gets data based on key
+                                                String data = node.GetData(httpRequest.Body);
+                                                //sends data back to client
+                                                httpResponse = new HttpResponse("HTTP", "200 OK", data);
+                                                break;
 
                                             default:
                                                 System.out.println("Does not recognize path: " + httpRequest.Path.toLowerCase());
@@ -306,11 +313,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String serverResponse;
 
                 //default value for clientRequest
-                //String clientRequest = command;
-
-
-                //test default value for clientRequest
-                command = "addData";
+                //command = "addData";
+                command = "getData";
                 String clientRequest = command;
 
                 HttpRequest httpRequest;
@@ -324,6 +328,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             break;
                         case "adddata":
                             httpRequest = new HttpRequest("HTTP", "POST", "addData", "test");
+                            clientRequest = httpRequest.GetJsonString();
+                            break;
+                        case "getdata":
+                            //the request-body contains the key for the data
+                            httpRequest = new HttpRequest("HTTP", "GET", "getData",
+                                    "9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08");
                             clientRequest = httpRequest.GetJsonString();
                             break;
                     }
