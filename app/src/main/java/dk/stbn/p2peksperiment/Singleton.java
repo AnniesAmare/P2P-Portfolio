@@ -90,6 +90,11 @@ public class Singleton {
                                             case "getid":
                                                 httpResponse = new HttpResponse("HTTP", "200 OK", "node.getId()");
                                                 break;
+
+                                            case "getneighbors":
+                                                httpResponse = new HttpResponse("HTTP", "200 OK", "node.getneighbors");
+                                                break;
+
                                             default:
                                                 System.out.println("Does not recognize path: " + httpRequest.Path.toLowerCase());
                                                 httpResponse = new HttpResponse("HTTP", "400 Bad Request");
