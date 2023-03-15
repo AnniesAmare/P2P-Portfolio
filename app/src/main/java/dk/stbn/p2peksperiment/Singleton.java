@@ -48,6 +48,7 @@ public class Singleton {
         @Override
         public void run() {
             //Always be ready for next client
+            //This is a test
             boolean running = true;
             while (true) {
                 try {
