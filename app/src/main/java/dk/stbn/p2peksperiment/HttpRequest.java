@@ -3,6 +3,7 @@ package dk.stbn.p2peksperiment;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
 public class HttpRequest {
     String Header;
     String Method;
@@ -31,7 +32,7 @@ public class HttpRequest {
             this.Method = json.getString("method");
             this.Body = json.getString("body");
 
-        }catch (JSONException e){
+        }catch (JSONException e){ //the error is thrown here
             System.out.println("Could not convert from: " + jsonString + " to HttpRequest");
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -53,6 +54,8 @@ public class HttpRequest {
         }
         return json.toString();
     }
+
+
 
 
 
